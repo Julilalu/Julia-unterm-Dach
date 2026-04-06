@@ -1,0 +1,300 @@
+@font-face {
+    font-family: "Hack Regular";
+    src: url(Hack-Regular.ttf) format("truetype");
+}
+
+html {
+    overflow-y: scroll;
+}
+
+body {
+    background-color: #ee82ee;
+    color: #ffff00;
+    font-family: 'Hack Regular', sans-serif;
+    margin: 0;
+    padding: 1rem 1rem 3rem;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.typewriter-wrap {
+    display: inline-block;
+}
+
+.tw-cursor {
+    display: inline-block;
+    margin-left: 1px;
+    animation: tw-blink 0.9s step-end infinite;
+    font-weight: normal;
+}
+
+@keyframes tw-blink {
+    50% {
+        opacity: 0;
+    }
+}
+
+.choice-row {
+    display: inline-block;
+    margin-top: 0.25em;
+}
+
+.response-block {
+    display: block;
+    margin-top: 0.5em;
+}
+
+.response-block .response-img-reveal {
+    display: inline-block;
+    margin-top: 0.5em;
+    padding: 0;
+    border: none;
+    border-bottom: 2px solid currentColor;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.response-block .response-img-reveal:hover {
+    opacity: 0.85;
+}
+
+.response-block .response-img-reveal:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+.response-img-row {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: flex-end;
+    margin-top: 0.75em;
+    max-width: 100%;
+    vertical-align: bottom;
+}
+
+.response-img-row .response-img {
+    display: block;
+    max-width: min(50%, 8rem);
+    height: auto;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.response-img-row .tw-cursor {
+    position: relative;
+    z-index: 2;
+    flex-shrink: 0;
+    margin-left: 0.12em;
+    margin-bottom: 0.08em;
+    align-self: flex-end;
+}
+
+.choice-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    margin-right: 1em;
+    vertical-align: middle;
+}
+
+.choice-item:last-child {
+    margin-right: 0;
+}
+
+.tick-box {
+    box-sizing: border-box;
+    width: 1.1em;
+    height: 1.1em;
+    padding: 0;
+    border: 2px solid currentColor;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    vertical-align: middle;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.tick-box:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.tick-cross {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 70%;
+    height: 70%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.tick-cross::before,
+.tick-cross::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2px;
+    height: 100%;
+    background: currentColor;
+    transform-origin: center;
+}
+
+.tick-cross::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.tick-cross::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.tick-box.is-checked .tick-cross {
+    opacity: 1;
+}
+
+.hupsi-track {
+    container-type: inline-size;
+    container-name: hupsi-strip;
+    width: 100%;
+    max-width: 100%;
+    margin-top: 0.5rem;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.hupsi-followup-wrap {
+    display: block;
+    width: 100%;
+    max-width: min(42rem, 100%);
+    box-sizing: border-box;
+    margin-top: 0.35rem;
+}
+
+.hupsi-followup-wrap > .tw-cursor {
+    display: block;
+    margin-top: 0.35rem;
+    margin-left: 0;
+}
+
+.hupsi-lane {
+    width: 100%;
+    min-height: clamp(48px, 12vh, 140px);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.hupsi-after {
+    pointer-events: auto;
+    max-width: min(42rem, calc(100vw - 2.5rem));
+    font: inherit;
+    color: inherit;
+    line-height: 1.4;
+}
+
+.hupsi-after-cursor {
+    display: inline-block;
+    margin-left: 1px;
+    animation: tw-blink 0.9s step-end infinite;
+    vertical-align: text-bottom;
+}
+
+.hupsi-lane .hupsi-runner {
+    display: block;
+    box-sizing: border-box;
+    min-width: 64px;
+    height: clamp(48px, 12vh, 140px);
+    width: auto;
+    object-fit: contain;
+    object-position: left center;
+    animation-name: hupsi-cross;
+    /* Dauer mit script.js → hupsiAnimDurationMs abstimmen */
+    animation-duration: 4s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    will-change: transform;
+}
+
+@keyframes hupsi-cross {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(calc(100cqw + 100%));
+    }
+}
+
+@supports not (width: 1cqw) {
+    .hupsi-lane .hupsi-runner {
+        animation-name: hupsi-cross-vw;
+    }
+}
+
+@keyframes hupsi-cross-vw {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(calc(100vw + 100%));
+    }
+}
+
+.kkk-words {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin-top: 0.75rem;
+}
+
+.kkk-word {
+    padding: 0;
+    border: none;
+    border-bottom: 2px solid currentColor;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    text-align: left;
+}
+
+.kkk-word:hover {
+    opacity: 0.88;
+}
+
+.kkk-word:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+}
+
+.kkk-word.is-active {
+    font-weight: bold;
+    border-bottom-width: 3px;
+}
+
+.kkk-image-view {
+    margin-top: 0.75rem;
+    min-height: 0;
+}
+
+.kkk-preview-img {
+    display: block;
+    max-width: min(50%, 8rem);
+    height: auto;
+    box-sizing: border-box;
+}
+
+.kkk-description {
+    margin-top: 0.65rem;
+    max-width: min(100%, 36rem);
+    line-height: 1.45;
+    font: inherit;
+    color: inherit;
+}
