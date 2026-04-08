@@ -4,8 +4,8 @@
 
   const wrap = document.querySelector(".typewriter-wrap");
   const cursor = document.querySelector(".tw-cursor");
-  const charMs = 20; /*50*/
-  const pauseAfterLineMs = 950;
+  const charMs = 40; /*50*/
+  const pauseAfterLineMs = 550;
 
   const segments = [
     { kind: "text", value: "Hi" },
@@ -114,6 +114,50 @@
 
   /** Muss zur CSS-Animation `hupsi-cross` passen (Dauer eines Durchlaufs). */
   const hupsiAnimDurationMs = 4000;
+
+  const prefetchedMedia = new Set();
+
+  function prefetchImageUrls(urls) {
+    if (!urls || !urls.length) return;
+    for (let i = 0; i < urls.length; i++) {
+      const href = urls[i];
+      if (typeof href !== "string" || !href || prefetchedMedia.has(href)) continue;
+      prefetchedMedia.add(href);
+      const im = new Image();
+      im.decoding = "async";
+      im.src = href;
+    }
+  }
+
+  function collectImageSegmentMediaUrls(seg) {
+    if (!seg || seg.kind !== "image") return [];
+    const out = [];
+    if (seg.src) out.push(seg.src);
+    if (seg.hupsi !== false) {
+      out.push(seg.hupsiSrc != null ? seg.hupsiSrc : "hupsi2.png");
+    }
+    if (seg.hupsiKkk && seg.hupsiKkk.length) {
+      for (let k = 0; k < seg.hupsiKkk.length; k++) {
+        if (seg.hupsiKkk[k].src) out.push(seg.hupsiKkk[k].src);
+      }
+    }
+    if (seg.afterKkk) {
+      if (seg.afterKkk.firstSrc) out.push(seg.afterKkk.firstSrc);
+      if (seg.afterKkk.secondSrc) out.push(seg.afterKkk.secondSrc);
+    }
+    return out;
+  }
+
+  function prefetchMediaFromResponseSegments(segments) {
+    if (!segments || !segments.length) return;
+    const urls = [];
+    for (let i = 0; i < segments.length; i++) {
+      if (segments[i].kind === "image") {
+        urls.push.apply(urls, collectImageSegmentMediaUrls(segments[i]));
+      }
+    }
+    prefetchImageUrls(urls);
+  }
 
   function wait(ms) {
     return new Promise(function (resolve) {
@@ -226,6 +270,8 @@
     block.appendChild(descEl);
     wrap.appendChild(block);
 
+    prefetchImageUrls([post.secondSrc]);
+
     let swapped = false;
     function doSwap() {
       if (swapped || !document.body.contains(block)) return;
@@ -302,6 +348,7 @@
     preview.className = "kkk-preview-img";
     preview.alt = "";
     preview.decoding = "async";
+    preview.loading = "eager";
     preview.hidden = true;
     view.appendChild(preview);
 
@@ -334,6 +381,7 @@
         btn.classList.add("is-active");
 
         const descSegs = item.description;
+        preview.fetchPriority = "high";
         if (!descSegs || descSegs.length === 0) {
           preview.src = item.src;
           markThirdKkkReadyIfNeeded(i);
@@ -392,6 +440,7 @@
   function scheduleHupsi(img, seg) {
     if (seg.hupsi === false) return;
     cancelHupsi();
+    prefetchImageUrls(collectImageSegmentMediaUrls(seg));
     const delay = seg.hupsiDelayMs != null ? seg.hupsiDelayMs : 800;
     const src = seg.hupsiSrc != null ? seg.hupsiSrc : "hupsi2.png";
     hupsiTimeoutId = setTimeout(function () {
@@ -414,6 +463,7 @@
       runner.alt = "";
       runner.className = "hupsi-runner";
       runner.decoding = "async";
+      runner.fetchPriority = "high";
       runner.style.animationDuration = hupsiAnimDurationMs + "ms";
       runner.addEventListener("error", function () {
         runner.style.outline = "2px dashed currentColor";
@@ -529,7 +579,9 @@
           img.src = imgSrc;
           img.alt = imgAlt;
           img.className = "response-img";
-          img.loading = "lazy";
+          img.loading = "eager";
+          img.fetchPriority = "high";
+          img.decoding = "async";
           photoLine.appendChild(img);
 
           const capSegs = seg.imageCaption;
@@ -621,6 +673,7 @@
       setBoxChecked(box, true);
       responseRunId++;
       const runId = responseRunId;
+      prefetchMediaFromResponseSegments(responseSegments);
       emptyResponseHost(responseHost);
       typeSegmentsIn(responseHost, responseSegments, function () {
         return runId === responseRunId;
