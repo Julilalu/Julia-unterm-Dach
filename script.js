@@ -28,13 +28,19 @@
       kind: "image",
       src: "passbild_pinkgelb2.png",
       alt: "thats me",
-      revealLabel: "klick hier, um mein Ausweis-Foto zu sehen",
+      revealLabel: "klick hier",
+      imageCaption: [
+        {
+          kind: "text",
+          value:
+            "mein Perso-Ausweisfoto",
+        },
+      ],
       /** Nach dem ersten Hupsi-Durchlauf (Schreibmaschineneffekt unter der Bahn). */
       hupsiFollowup: [
         { kind: "text", value: "anyways." },
         { kind: "break" },
         { kind: "text", value: "Mein Leben zurzeit besteht aus" },
-        { kind: "break" },
       ],
       /** Unter dem Follow-up: klickbare Wörter → jeweils eigenes Bild (Dateien neben index.html). */
       hupsiKkk: [
@@ -45,11 +51,9 @@
           description: [
             { kind: "text", value: "Fotografie Projekt letztes Semester. "},
             { kind: "break" },
-            { kind: "text", value: "Ehrlich gesagt weiß ich nicht wirklich, ob Fotografie mein Ding ist, oder doch Coden oder TypoOo0ooOoo"},
+            { kind: "text", value: "Bin noch am Ausprobieren, ob Foto, Coden oder Typo. Finde alles irgendwie cool."},
             { kind: "break" },
-            { kind: "text", value: "Bin grad am Ausprobieren..."},
-            { kind: "break" },
-            { kind: "text", value: "Aber ich finde skaten mega und wünschte ich könnte es besser" },
+            { kind: "text", value: "+ ich finde skaten mega und wünschte ich könnte es besser" },
             { kind: "break" },
           ],
         },
@@ -78,6 +82,20 @@
           ],
         },
       ],
+      /** Nach KD/Kaffee/Kultur: Bild → Klick ersetzt es; darunter Beschreibung (nach dem Tausch, Schreibmaschine). */
+      afterKkk: {
+        firstSrc: "geschenk.png",
+        secondSrc: "catmeme.gif",
+        altFirst: "Geschenk",
+        altSecond: "Katzenumarmung",
+        description: [
+          {
+            kind: "text",
+            value:
+              "Das wars! Ich würde mich mega freuen, wenn wir uns bald unterm Dach sehen!",
+          },
+        ],
+      },
     },
   ];
 
@@ -151,18 +169,21 @@
       tip = localCursor;
     }
     try {
+      if (!segs || segs.length === 0) {
+        return true;
+      }
       for (let i = 0; i < segs.length; i++) {
-        if (!isAlive()) return;
+        if (!isAlive()) return false;
         const item = segs[i];
         if (item.kind === "break") {
           await wait(pauseAfterLineMs);
-          if (!isAlive()) return;
+          if (!isAlive()) return false;
           container.insertBefore(document.createElement("br"), tip);
           continue;
         }
         if (item.kind !== "text" || !item.value) continue;
         for (let j = 0; j < item.value.length; j++) {
-          if (!isAlive()) return;
+          if (!isAlive()) return false;
           container.insertBefore(
             document.createTextNode(item.value[j]),
             tip
@@ -170,6 +191,7 @@
           await wait(charMs);
         }
       }
+      return true;
     } finally {
       if (!useMain && tip && tip.parentNode) {
         tip.remove();
@@ -177,9 +199,100 @@
     }
   }
 
-  function appendHupsiKkk(wrap, items) {
-    if (!wrap || !items || items.length === 0) return;
+  function appendAfterKkkBlock(wrap, post) {
+    if (!wrap || !post || !post.firstSrc || !post.secondSrc) return;
 
+    const block = document.createElement("div");
+    block.className = "post-kkk";
+
+    const swapImg = document.createElement("img");
+    swapImg.className = "post-kkk-swap";
+    swapImg.src = post.firstSrc;
+    swapImg.alt = post.altFirst != null ? post.altFirst : "";
+    swapImg.decoding = "async";
+    swapImg.tabIndex = 0;
+    swapImg.setAttribute("role", "button");
+    swapImg.setAttribute(
+      "aria-label",
+      post.swapHint != null
+        ? post.swapHint
+        : "Klicken, um ein anderes Bild zu sehen"
+    );
+
+    const descEl = document.createElement("div");
+    descEl.className = "post-kkk-desc";
+
+    block.appendChild(swapImg);
+    block.appendChild(descEl);
+    wrap.appendChild(block);
+
+    let swapped = false;
+    function doSwap() {
+      if (swapped || !document.body.contains(block)) return;
+      swapped = true;
+
+      const descSegs = post.description;
+      let descStarted = false;
+      function startDesc() {
+        if (descStarted || !document.body.contains(block)) return;
+        descStarted = true;
+        if (!descSegs || descSegs.length === 0) return;
+        descEl.setAttribute("aria-live", "polite");
+        typePlainSegments(descEl, descSegs, function () {
+          return document.body.contains(block);
+        }, true);
+      }
+
+      swapImg.addEventListener("load", startDesc, { once: true });
+      swapImg.addEventListener("error", startDesc, { once: true });
+      swapImg.src = post.secondSrc;
+      swapImg.alt = post.altSecond != null ? post.altSecond : "";
+      swapImg.classList.add("is-swapped");
+      swapImg.setAttribute(
+        "aria-label",
+        post.altSecond != null ? post.altSecond : "Bild"
+      );
+      if (swapImg.complete) {
+        startDesc();
+      }
+    }
+
+    swapImg.addEventListener("click", doSwap);
+    swapImg.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        doSwap();
+      }
+    });
+  }
+
+  function appendHupsiKkk(wrap, items, imageSeg) {
+    if (!wrap) return;
+
+    /** Geschenk (afterKkk), sobald der 3. KKK-Text vollständig da ist (Index 2). */
+    const KKK_GIFT_AFTER_INDEX = 2;
+    let afterKkkAppended = false;
+    function tryAppendGiftAfterThirdKkkText() {
+      if (
+        afterKkkAppended ||
+        !imageSeg ||
+        !imageSeg.afterKkk ||
+        !items ||
+        items.length === 0
+      ) {
+        return;
+      }
+      if (items.length <= KKK_GIFT_AFTER_INDEX) return;
+      afterKkkAppended = true;
+      appendAfterKkkBlock(wrap, imageSeg.afterKkk);
+    }
+
+    function markThirdKkkReadyIfNeeded(index) {
+      if (index !== KKK_GIFT_AFTER_INDEX) return;
+      tryAppendGiftAfterThirdKkkText();
+    }
+
+    if (items && items.length > 0) {
     const row = document.createElement("div");
     row.className = "kkk-words";
 
@@ -223,6 +336,7 @@
         const descSegs = item.description;
         if (!descSegs || descSegs.length === 0) {
           preview.src = item.src;
+          markThirdKkkReadyIfNeeded(i);
           return;
         }
 
@@ -238,7 +352,17 @@
         function startDescriptionType() {
           if (descTypeStarted || !descAlive()) return;
           descTypeStarted = true;
-          typePlainSegments(descEl, descSegs, descAlive, true);
+          typePlainSegments(descEl, descSegs, descAlive, true).then(
+            function (completed) {
+              if (
+                completed &&
+                myRun === kkkDescriptionRunId &&
+                document.body.contains(wrap)
+              ) {
+                markThirdKkkReadyIfNeeded(i);
+              }
+            }
+          );
         }
 
         preview.addEventListener("load", startDescriptionType, { once: true });
@@ -258,12 +382,17 @@
       row.insertAdjacentElement("afterend", cursor);
     }
     wrap.appendChild(view);
+    }
+
+    if (imageSeg && imageSeg.afterKkk && (!items || items.length === 0)) {
+      appendAfterKkkBlock(wrap, imageSeg.afterKkk);
+    }
   }
 
   function scheduleHupsi(img, seg) {
     if (seg.hupsi === false) return;
     cancelHupsi();
-    const delay = seg.hupsiDelayMs != null ? seg.hupsiDelayMs : 2000;
+    const delay = seg.hupsiDelayMs != null ? seg.hupsiDelayMs : 800;
     const src = seg.hupsiSrc != null ? seg.hupsiSrc : "hupsi2.png";
     hupsiTimeoutId = setTimeout(function () {
       hupsiTimeoutId = null;
@@ -336,7 +465,7 @@
         }
 
         if (!followupAlive()) return;
-        appendHupsiKkk(followWrap, kkkItems);
+        appendHupsiKkk(followWrap, kkkItems, seg);
       }
 
       runner.addEventListener(
@@ -391,21 +520,52 @@
         const imgAlt = seg.alt != null ? seg.alt : "";
         reveal.addEventListener("click", function onReveal() {
           reveal.removeEventListener("click", onReveal);
+
           const row = document.createElement("span");
           row.className = "response-img-row";
+          const photoLine = document.createElement("span");
+          photoLine.className = "response-img-photo-line";
           const img = document.createElement("img");
           img.src = imgSrc;
           img.alt = imgAlt;
           img.className = "response-img";
           img.loading = "lazy";
-          row.appendChild(img);
-          reveal.replaceWith(row);
-          if (cursor) {
-            cursor.hidden = false;
-            cursor.removeAttribute("hidden");
-            row.appendChild(cursor);
+          photoLine.appendChild(img);
+
+          const capSegs = seg.imageCaption;
+          if (capSegs && capSegs.length > 0) {
+            const captionEl = document.createElement("div");
+            captionEl.className = "response-img-caption";
+            row.appendChild(captionEl);
+            row.appendChild(photoLine);
+            reveal.replaceWith(row);
+            captionEl.setAttribute("aria-live", "polite");
+            typePlainSegments(
+              captionEl,
+              capSegs,
+              function () {
+                return document.body.contains(row);
+              },
+              true
+            ).then(function () {
+              if (!document.body.contains(row)) return;
+              if (cursor) {
+                cursor.hidden = false;
+                cursor.removeAttribute("hidden");
+                photoLine.appendChild(cursor);
+              }
+              scheduleHupsi(img, seg);
+            });
+          } else {
+            row.appendChild(photoLine);
+            reveal.replaceWith(row);
+            if (cursor) {
+              cursor.hidden = false;
+              cursor.removeAttribute("hidden");
+              photoLine.appendChild(cursor);
+            }
+            scheduleHupsi(img, seg);
           }
-          scheduleHupsi(img, seg);
         });
         container.appendChild(reveal);
         if (cursor) container.appendChild(cursor);

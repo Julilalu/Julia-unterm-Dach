@@ -68,14 +68,29 @@ body {
 
 .response-img-row {
     display: inline-flex;
-    flex-direction: row;
-    align-items: flex-end;
+    flex-direction: column;
+    align-items: flex-start;
     margin-top: 0.75em;
     max-width: 100%;
     vertical-align: bottom;
+    gap: 0.45rem;
 }
 
-.response-img-row .response-img {
+.response-img-caption {
+    display: block;
+    max-width: min(36rem, 100%);
+    line-height: 1.4;
+    font: inherit;
+    color: inherit;
+}
+
+.response-img-photo-line {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+.response-img-photo-line .response-img {
     display: block;
     max-width: min(50%, 8rem);
     height: auto;
@@ -84,7 +99,7 @@ body {
     z-index: 1;
 }
 
-.response-img-row .tw-cursor {
+.response-img-photo-line .tw-cursor {
     position: relative;
     z-index: 2;
     flex-shrink: 0;
@@ -297,4 +312,33 @@ body {
     line-height: 1.45;
     font: inherit;
     color: inherit;
+}
+
+.post-kkk {
+    margin-top: 1.25rem;
+    max-width: min(100%, 36rem);
+}
+
+.post-kkk-swap {
+    display: block;
+    max-width: min(50%, 8rem);
+    height: auto;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.post-kkk-swap:focus-visible {
+    outline-offset: 3px;
+}
+
+.post-kkk-swap.is-swapped {
+    cursor: default;
+}
+
+.post-kkk-desc {
+    margin-top: 0.65rem;
+    line-height: 1.45;
+    font: inherit;
+    color: inherit;
+    max-width: min(100%, 36rem);
 }
